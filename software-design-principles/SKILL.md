@@ -1,6 +1,6 @@
 ---
 name: software-design-principles
-description: Software design principles and red flags to minimize complexity and ensure maintainability, based on John Ousterhout's "A Philosophy of Software Design."
+description: Software design principles and red flags to minimize complexity and ensure maintainability, based on John Ousterhout's "A Philosophy of Software Design." Use this skill whenever writing, reviewing, or refactoring code — apply these principles to every PR review, design discussion, architecture decision, or code cleanup. Use also when someone asks about code quality, complexity, or design patterns.
 ---
 
 # Software Design Principles

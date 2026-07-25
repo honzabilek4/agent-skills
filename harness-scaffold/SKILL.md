@@ -1,6 +1,6 @@
 ---
 name: harness-scaffold
-description: Initialize new repos with Harness Engineering principles — the 5 subsystems, Loop Engineering, Maker/Checker, and Ratchet patterns that make any project agent-ready, regardless of tech stack.
+description: Initialize new repos with Harness Engineering principles — the 5 subsystems, Loop Engineering, Maker/Checker, and Ratchet patterns that make any project agent-ready, regardless of tech stack. Use this skill whenever creating a new project repo, bootstrapping a codebase for autonomous agents, setting up CI/CD guardrails, or applying the Repo as System of Record pattern.
 version: 2.0.0
 ---
 

@@ -27,7 +27,7 @@ ACTION="wire"
 #   extra: for Hermes — the category subdirectory gets interpolated as {category}
 AGENTS=(
   "hermes|$HOME/.hermes/skills/{category}|file-symlink|category"
-  "claude|$HOME/.claude/skills|file-symlink|flat-name"   # flat .md file, not dir
+  "claude|$HOME/.claude/skills|dir-file|"    # Claude Code 2.x: dir + SKILL.md (not flat .md)
   "codex|$HOME/.codex/skills|dir-file|"
   "gemini|$HOME/.gemini/skills|dir-file|"
   "pi|$HOME/.pi/agent/skills|dir-file|"

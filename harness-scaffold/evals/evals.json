@@ -1,0 +1,23 @@
+{
+  "skill_name": "harness-scaffold",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm starting a new Python CLI tool called 'ship' that deploys Docker containers to a VPS. It'll be maintained by AI agents alongside me. Scaffold the repo with the appropriate harness level, including the entry document, progress tracking, and verification command. The project uses `uv` for Python dependency management and `pytest` for testing.",
+      "expected_output": "Creates: AGENTS.md (entry doc answering 5 questions — what, how organized, how to run, how to verify, what's next/was just done), PROGRESS.md (state tracking with last commit, completed, in-progress, next steps), pyproject.toml with uv+pytest, verification command (pytest or similar executable check). AGENTS.md includes directory map, setup commands, rules/constraints for agents. Follows scaffolding procedure steps 1-8 from the skill. Appropriate level: light harness (single-person CLI tool).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I have an existing Python project at /tmp/legacy-app that's been worked on by multiple agents. It has no AGENTS.md, no progress tracking, stale README from 2023, and no verification command. There's a Makefile with some targets but half are broken. Run a harness health check on it and tell me what's missing and the top 3 things to fix first.",
+      "expected_output": "Runs the 6-point health check from the skill: (1) can fresh agent run setup+verify? Likely fails — no verification command. (2) single entry doc answering 5 questions? No AGENTS.md, README stale. (3) progress/state file current? None exists. (4) debug prints/temp files? Needs inspection. (5) verification proves correctness? No verification exists. (6) decision log? None. Top 3 fixes: create AGENTS.md, add verification command, create PROGRESS.md. Prioritizes based on the fresh-session test (agent must be able to clone, setup, verify, understand next steps from repo alone).",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Create a research harness for an experiment repo that will test different LLM prompting strategies for code generation. The project uses Python with Jupyter notebooks and the results should be tracked across multiple experiment runs. Include the decision log since we'll be making architecture choices as we go.",
+      "expected_output": "Creates research-level harness per the scaffolding levels: entry doc (AGENTS.md — what the experiment is, how to run it, how to verify results), research log instead of feature queue (tracks hypotheses, experiments run, results, conclusions), decision log (architecture choices, model choices, prompt design decisions). Verification: executable command that runs a minimal experiment and checks output format. No PROGRESS.md feature queue (research doesn't have features to build). Follows the 'research/experiments' scaffolding level from the skill.",
+      "files": []
+    }
+  ]
+}

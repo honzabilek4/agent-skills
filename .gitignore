@@ -1,1 +1,4 @@
 agent-skills/
+
+# Skill-creator workspace directories (generated during eval/test loops)
+*-workspace/
