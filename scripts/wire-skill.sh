@@ -205,7 +205,7 @@ list_skills() {
         found=1
       fi
     done
-    [[ $found -eq 0 ]] && echo "    (none)"
+    [[ $found -eq 0 ]] && echo "    (none)" || true
   done
 }
 
