@@ -47,10 +47,10 @@ skill-name/
 
 ## Per-Agent Setup
 
-### Add a new skill to all agents
+## Adding a New Skill
 
 ```bash
-# 1. Create the skill in this repo
+# 1. Create the skill directory
 mkdir -p ~/Projects/agent-skills/my-skill
 cat > ~/Projects/agent-skills/my-skill/SKILL.md << 'EOF'
 ---
@@ -61,30 +61,17 @@ description: What this skill does and when to use it
 ...
 EOF
 
-# 2. Wire it to the standard hub
-ln -s ~/Projects/agent-skills/my-skill ~/.agents/skills/my-skill
+# 2. Wire it to all agents
+cd ~/Projects/agent-skills
+./scripts/wire-skill.sh my-skill --hermes-category general
 
-# 3. Wire it to Hermes
-mkdir -p ~/.hermes/skills/general/my-skill
-ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.hermes/skills/general/my-skill/SKILL.md
-
-# 4. Wire it to Claude Code
-ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.claude/skills/my-skill.md
-
-# 5. Wire it to Codex (real dir + file symlink avoids symlink bug)
-mkdir -p ~/.codex/skills/my-skill
-ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.codex/skills/my-skill/SKILL.md
-
-# 6. Wire it to Gemini CLI (real dir + file symlink avoids symlink bug)
-mkdir -p ~/.gemini/skills/my-skill
-ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.gemini/skills/my-skill/SKILL.md
-
-# 7. Wire it to Pi
-mkdir -p ~/.pi/agent/skills/my-skill
-ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.pi/agent/skills/my-skill/SKILL.md
-
-# 8. OpenCode — auto-discovered via ~/.claude/skills/ and ~/.agents/skills/ (no extra step)
+# 3. Commit
+git add my-skill/ && git commit -m "Add my-skill"
 ```
+
+Or use `./scripts/wire-skill.sh --all --hermes-category <cat>` to re-wire everything.
+
+See `./scripts/wire-skill.sh --help` for all options (`--list`, `--unwire`, `--dry-run`).
 
 ### Agent Discovery Paths Reference
 
