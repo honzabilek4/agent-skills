@@ -79,7 +79,11 @@ ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.codex/skills/my-skill/SKILL.m
 mkdir -p ~/.gemini/skills/my-skill
 ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.gemini/skills/my-skill/SKILL.md
 
-# 7. OpenCode — auto-discovered via ~/.claude/skills/ and ~/.agents/skills/ (no extra step)
+# 7. Wire it to Pi
+mkdir -p ~/.pi/agent/skills/my-skill
+ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.pi/agent/skills/my-skill/SKILL.md
+
+# 8. OpenCode — auto-discovered via ~/.claude/skills/ and ~/.agents/skills/ (no extra step)
 ```
 
 ### Agent Discovery Paths Reference
@@ -90,6 +94,7 @@ ln -s ~/Projects/agent-skills/my-skill/SKILL.md ~/.gemini/skills/my-skill/SKILL.
 | **Claude Code** | `~/.claude/skills/<name>.md` | File symlink |
 | **Codex** | `~/.codex/skills/<name>/SKILL.md` | Real dir + file symlink |
 | **Gemini CLI** | `~/.gemini/skills/<name>/SKILL.md` | Real dir + file symlink |
+| **Pi** | `~/.pi/agent/skills/<name>/SKILL.md` | Real dir + file symlink |
 | **OpenCode** | `~/.claude/skills/` or `~/.agents/skills/` | Auto-covered |
 | **Standard hub** | `~/.agents/skills/<name>/` | Directory symlink |
 
