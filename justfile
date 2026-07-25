@@ -65,3 +65,35 @@ commit msg: precommit
     git add -A
     git diff --cached --stat
     git commit -m "{{msg}}"
+
+# ── Evals ────────────────────────────────────────────────────────────
+
+# List all evals for a skill (usage: just eval-list <skill>)
+eval-list skill:
+    python3 scripts/evals.py list {{skill}}
+
+# Show details of one eval (usage: just eval-show <skill> <id>)
+eval-show skill id:
+    python3 scripts/evals.py show {{skill}} {{id}}
+
+# Generate a delegate_task prompt for one eval (usage: just eval-prompt <skill> <id>)
+eval-prompt skill id:
+    python3 scripts/evals.py run-prompt {{skill}} {{id}}
+
+# Run all evals for a skill via delegate_task subagents
+# Usage: just eval-run <skill>
+# (This requires an agent session — it prints instructions for the agent)
+eval-run skill:
+    @echo "To run evals for '{{skill}}', the agent in this session should:"
+    @echo ""
+    python3 scripts/evals.py list {{skill}}
+    @echo ""
+    @echo "For each eval above, use delegate_task with the prompt from 'just eval-prompt {{skill}} <id>'"
+    @echo "Review results qualitatively against expected_output in evals/evals.json"
+
+# Launch eval viewer for a skill's workspace (usage: just eval-view <skill>)
+eval-view skill:
+    python3.12 skill-creator/eval-viewer/generate_review.py {{skill}}-workspace/iteration-1 --skill-name {{skill}} --static /tmp/{{skill}}-eval-viewer.html
+    @echo ""
+    @echo "Viewer written to /tmp/{{skill}}-eval-viewer.html"
+    @open /tmp/{{skill}}-eval-viewer.html
