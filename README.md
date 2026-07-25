@@ -51,15 +51,49 @@ Runs 10 checks per skill: frontmatter validity, kebab-case naming, pushy descrip
 
 ## Evals
 
-Each skill can have test prompts in `evals/evals.json`. Run them via:
+Each skill can have test prompts in `evals/evals.json`. Evals are **agent-in-the-loop** — the CLI orchestrates, the agent session executes.
+
+### Step by step
 
 ```bash
-just eval-list <skill>          # list evals
-just eval-show <skill> <id>     # show one in detail
-just eval-prompt <skill> <id>   # generate delegate_task prompt
+# 1. Print all eval prompts (from CLI or agent session)
+just eval harness-scaffold
 ```
 
-The agent then spawns a subagent with `delegate_task` using that prompt and reviews results against `expected_output`.
+This prints each eval prompt and shows where to save output. **Nothing executes yet** — it's a dry-run.
+
+```
+# 2. Agent executes each eval (inside the agent session)
+#    For each eval, the agent reads the prompt and does the work.
+#    Two ways to execute:
+#
+#    a) Inline — agent does it directly in the conversation
+#    b) delegate_task — spawn a subagent (isolated context)
+#
+#    Save the result to the path shown by step 1:
+#    <skill>-workspace/eval-<id>/output.md
+```
+
+```
+# 3. Generate the report (from CLI)
+just eval-report harness-scaffold
+```
+
+Reads all `output.md` files and produces `harness-scaffold-workspace/RESULTS.md`.
+
+### Why agent-in-the-loop?
+
+The eval prompts test whether the skill actually changes agent behavior. A plain API call can't replicate the agent's tool access, skill loading, or context injection. The agent session IS the test harness — just like sandbox mode for human QA.
+
+### Available commands
+
+```bash
+just eval <skill>              # dry-run: print eval prompts
+just eval-one <skill> <id>     # show one eval prompt in detail
+just eval-report <skill>       # generate RESULTS.md from completed runs
+just eval-list <skill>         # list all evals with previews
+just eval-show <skill> <id>    # show one eval's prompt + expected output
+```
 
 ## Architecture
 
