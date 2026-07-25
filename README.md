@@ -55,31 +55,61 @@ Each skill can have test prompts in `evals/evals.json`. Evals are **agent-in-the
 
 ### Step by step
 
+**1. Print the eval prompts (dry-run)**
+
 ```bash
-# 1. Print all eval prompts (from CLI or agent session)
 just eval harness-scaffold
 ```
 
-This prints each eval prompt and shows where to save output. **Nothing executes yet** — it's a dry-run.
+This prints each prompt and shows where to save output. Nothing executes yet.
 
+**2. Agent executes each eval**
+
+Copy one of the printed prompts into the agent session and ask it to execute. Two approaches:
+
+*Inline (faster, shares context):*
 ```
-# 2. Agent executes each eval (inside the agent session)
-#    For each eval, the agent reads the prompt and does the work.
-#    Two ways to execute:
-#
-#    a) Inline — agent does it directly in the conversation
-#    b) delegate_task — spawn a subagent (isolated context)
-#
-#    Save the result to the path shown by step 1:
-#    <skill>-workspace/eval-<id>/output.md
+Run eval 1 for harness-scaffold: "I'm starting a new Python CLI tool called
+'ship' that deploys Docker containers to a VPS..." Save your analysis to
+harness-scaffold-workspace/eval-1/output.md
 ```
 
+*Subagent (isolated, cleaner):*
 ```
-# 3. Generate the report (from CLI)
+Load the harness-scaffold skill and run eval 1 via delegate_task. Save the
+output to harness-scaffold-workspace/eval-1/output.md
+```
+
+The agent does the work, then saves the result to the path shown by step 1.
+
+**3. Generate the report**
+
+```bash
 just eval-report harness-scaffold
 ```
 
 Reads all `output.md` files and produces `harness-scaffold-workspace/RESULTS.md`.
+
+### Concrete example
+
+```bash
+# In CLI:
+$ just eval harness-scaffold
+# Prints:
+#   ## Eval 1
+#   **Prompt:** I'm starting a new Python CLI tool called 'ship'...
+#   **Save output to:** harness-scaffold-workspace/eval-1/output.md
+
+# In the agent session (this chat):
+> "Run eval 1 for harness-scaffold: scaffold a Python CLI called ship.
+>   Save your analysis to harness-scaffold-workspace/eval-1/output.md"
+
+# Agent scaffolds the project, writes output.md
+
+# Back in CLI:
+$ just eval-report harness-scaffold
+# → harness-scaffold-workspace/RESULTS.md
+```
 
 ### Why agent-in-the-loop?
 
