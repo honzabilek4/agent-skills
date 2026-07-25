@@ -91,9 +91,11 @@ eval-run skill:
     @echo "For each eval above, use delegate_task with the prompt from 'just eval-prompt {{skill}} <id>'"
     @echo "Review results qualitatively against expected_output in evals/evals.json"
 
-# Launch eval viewer for a skill's workspace (usage: just eval-view <skill>)
+# Launch eval viewer for a skill's workspace and open in browser
+# (usage: just eval-view <skill>)
 eval-view skill:
-    python3.12 skill-creator/eval-viewer/generate_review.py {{skill}}-workspace/iteration-1 --skill-name {{skill}} --static /tmp/{{skill}}-eval-viewer.html
+    @mkdir -p {{skill}}-workspace
+    python3.12 skill-creator/eval-viewer/generate_review.py {{skill}}-workspace/iteration-1 --skill-name {{skill}} --static {{skill}}-workspace/viewer.html
     @echo ""
-    @echo "Viewer written to /tmp/{{skill}}-eval-viewer.html"
-    @open /tmp/{{skill}}-eval-viewer.html
+    @echo "Opening viewer in browser..."
+    open {{skill}}-workspace/viewer.html
