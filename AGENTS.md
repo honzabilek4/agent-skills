@@ -43,3 +43,5 @@ Then use `delegate_task` with the output of `eval-prompt` to execute the eval.
 ## No drift
 
 This repo is the canonical source of truth. All edits happen here. Never edit the symlinked copy in `~/.hermes/skills/`, `~/.claude/skills/`, etc. — those are read-only mirrors.
+
+**Important:** `skill-creator/SKILL.md` is the upstream Anthropic source. Do NOT add Hermes-specific content, pitfalls, or cross-references to it — use AGENTS.md or README for that. If you reference a file from SKILL.md, that file MUST exist inside the skill-creator directory.
