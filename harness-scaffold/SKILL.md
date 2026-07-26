@@ -1,7 +1,8 @@
 ---
 name: harness-scaffold
 description: Initialize new repos with Harness Engineering principles — the 5 subsystems, Loop Engineering, Maker/Checker, and Ratchet patterns that make any project agent-ready, regardless of tech stack. Use this skill whenever creating a new project repo, bootstrapping a codebase for autonomous agents, setting up CI/CD guardrails, or applying the Repo as System of Record pattern.
-version: 2.0.0
+version: 3.0.0
+hermes_category: autonomous-ai-agents
 ---
 
 # Harness Scaffold — Initialize Agent-Ready Repositories
@@ -25,6 +26,12 @@ Every agent-ready project needs these five things. They are not files — they a
 | **Feedback / Verification** | Executable proof of correctness | "I know whether I actually succeeded" |
 
 When scaffolding a new project, ask: **does the repo provide each of these five?**
+
+## Context is a Finite Resource
+
+Every token in your harness files competes with the actual task for model attention. Models have an "attention budget" that degrades as context grows (context rot). The goal is the *smallest set of high-signal tokens* that reliably produce correct behavior.
+
+**Progressive disclosure:** rather than loading everything upfront, let the agent pull context just-in-time. The entry document references deeper files; the agent loads them when relevant. Organize context as a tree, not a dump.
 
 ## The Repo is the System of Record
 
@@ -52,13 +59,14 @@ Not every project needs the full machinery. Match the harness to the project:
 
 ## The Entry Document
 
-Whatever you call it (`AGENTS.md`, `README.md`, `CLAUDE.md`), the project must have ONE file that answers those five questions. It should include:
+Whatever you call it (`AGENTS.md`, `README.md`, `CLAUDE.md`), the project must have ONE file that answers those five questions. Keep it lightweight — it's loaded into every session, so every token counts.
 
-- **Project description** — one paragraph on what and why
-- **Directory map** — what lives where, in one sentence per directory
-- **Setup & run commands** — the exact commands to go from cold clone to running
-- **Verification command** — how to prove the project is working correctly
-- **Rules and constraints** — things the agent must and must not do in this project
+- **Project description** — one paragraph on what and why.
+- **Directory map** — what lives where, in one sentence per directory.
+- **Setup & run commands** — the exact commands to go from cold clone to running.
+- **Verification command** — how to prove the project is working correctly.
+- **Gotchas** — surprising or peculiar things the agent won't discover by reading the filesystem (e.g., "types live in one monolithic file", "tests use a custom runner"). Spend tokens on what the filesystem alone doesn't convey. Skip what's obvious from the file tree.
+- **References to deeper context** — point to other files (progress tracker, decision log, module architecture docs) for the agent to load on demand. Reference them; don't inline their contents.
 
 ## Progress Tracking (State Subsystem)
 
@@ -69,6 +77,13 @@ The agent needs to know where things stand. The mechanism depends on project sca
 - **Database / structured log** — for automated pipelines and ratchet loops.
 
 **The rule:** before ending a session, the agent MUST update state. "I'll update it later" means it never happens.
+
+### Long-Horizon Sessions
+
+For tasks spanning multiple context windows:
+
+- **Compaction:** When context nears the limit, summarize the conversation into `PROGRESS.md` (architectural decisions, unresolved bugs, implementation state) and restart with a clean context window seeded by that summary. Discard redundant tool outputs and stale messages. Start by maximizing recall, then iterate to improve precision.
+- **Sub-agent delegation:** For complex parallel work, delegate to sub-agents with clean context windows. Each returns a condensed summary (1–2K tokens). The main agent synthesizes from these summaries.
 
 ## Feature Queue (for codebase projects)
 
@@ -82,6 +97,14 @@ When the project has multiple features to build, maintain a machine-readable que
 ## Decision Log
 
 Record *why* architectural choices were made. Agents don't retain intermediate reasoning across sessions — without a log, they will redundantly re-evaluate or reverse past decisions. One line per decision: date, what was chosen, why, and what alternatives were considered.
+
+## Tool Design
+
+Tools define the contract between the agent and its environment. Well-designed tools reduce the need for examples and rules:
+
+- **Minimal and non-overlapping:** Keep the tool set small enough that a human can definitively say which tool fits any given situation.
+- **Interface teaches usage:** Descriptive parameter names, expressive enums, and clear descriptions teach the model how to use the tool.
+- **Self-contained:** Each tool description carries its own usage instructions. Don't duplicate guidance in the system prompt.
 
 ## Loop Engineering: Moving Outside the Loop
 

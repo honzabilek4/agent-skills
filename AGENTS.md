@@ -9,6 +9,7 @@ Always load the `skill-creator` skill first (`skill_view(name='skill-creator')`)
 - Body under 500 lines
 - Bundled resources in standard dirs only: `scripts/`, `references/`, `assets/`, `agents/`, `eval-viewer/`, `evals/`
 - No recursive/self-referencing symlinks
+- Optional `hermes_category` in frontmatter — sets the Hermes skill category (e.g., `hermes_category: autonomous-ai-agents`). Falls back to `general` if omitted. Override with `just wire-cat <skill> <cat>`.
 
 ## After adding or modifying a skill — update README
 

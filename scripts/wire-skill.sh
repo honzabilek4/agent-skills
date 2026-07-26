@@ -15,7 +15,8 @@ set -uo pipefail  # no -e: we handle errors in wire_skill explicitly
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SKILLS_DIR="$REPO_ROOT"
-HERMES_CATEGORY="general"
+HERMES_CATEGORY=""
+HERMES_CATEGORY_EXPLICIT=false
 DRY_RUN=false
 ACTION="wire"
 
@@ -74,6 +75,17 @@ wire_skill() {
     return 1
   fi
 
+  # Auto-detect Hermes category from SKILL.md frontmatter if not explicitly set
+  if [[ "$HERMES_CATEGORY_EXPLICIT" != "true" ]]; then
+    local fm_category
+    fm_category=$(awk '/^---$/{f++; next} f==1 && /^hermes_category:/ {gsub(/"/, ""); print $2; exit}' "$skill_md")
+    if [[ -n "$fm_category" ]]; then
+      HERMES_CATEGORY="$fm_category"
+    else
+      HERMES_CATEGORY="general"
+    fi
+  fi
+
   echo "Wiring: $skill_name"
 
   for def in "${AGENTS[@]}"; do
@@ -114,8 +126,22 @@ wire_skill() {
 
 unwire_skill() {
   local skill_dir="$1"
+  # Make absolute
+  [[ "$skill_dir" != /* ]] && skill_dir="$SKILLS_DIR/$skill_dir"
   local skill_name
   skill_name="$(basename "$skill_dir")"
+  local skill_md="$skill_dir/SKILL.md"
+
+  # Auto-detect Hermes category from SKILL.md frontmatter if not explicitly set
+  if [[ "$HERMES_CATEGORY_EXPLICIT" != "true" ]]; then
+    local fm_category
+    fm_category=$(awk '/^---$/{f++; next} f==1 && /^hermes_category:/ {gsub(/"/, ""); print $2; exit}' "$skill_md")
+    if [[ -n "$fm_category" ]]; then
+      HERMES_CATEGORY="$fm_category"
+    else
+      HERMES_CATEGORY="general"
+    fi
+  fi
 
   echo "Unwiring: $skill_name"
 
@@ -219,7 +245,7 @@ while [[ $# -gt 0 ]]; do
     --unwire)           ACTION="unwire" ;;
     --list)             ACTION="list" ;;
     --dry-run)          DRY_RUN=true ;;
-    --hermes-category)  HERMES_CATEGORY="$2"; shift ;;
+    --hermes-category)  HERMES_CATEGORY="$2"; HERMES_CATEGORY_EXPLICIT=true; shift ;;
     -h|--help)
       echo "Usage: wire-skill.sh [--all | <skill-dir>] [--unwire] [--list] [--dry-run] [--hermes-category <cat>]"
       echo ""
