@@ -1,156 +1,188 @@
 ---
 name: harness-scaffold
 description: Initialize new repos with Harness Engineering principles — the 5 subsystems, Loop Engineering, Maker/Checker, and Ratchet patterns that make any project agent-ready, regardless of tech stack. Use this skill whenever creating a new project repo, bootstrapping a codebase for autonomous agents, setting up CI/CD guardrails, or applying the Repo as System of Record pattern.
-version: 3.0.0
+version: 4.0.0
 hermes_category: autonomous-ai-agents
 ---
 
 # Harness Scaffold — Initialize Agent-Ready Repositories
 
-When starting any new project that AI agents will work on, apply the Harness Engineering principles from [Learn Harness Engineering](https://walkinglabs.github.io/learn-harness-engineering/). These principles are technology-agnostic — they work for Python, Rust, TypeScript, Go, or any stack.
+Apply the Harness Engineering principles from [Learn Harness Engineering](https://walkinglabs.github.io/learn-harness-engineering/). These principles are technology-agnostic and work for Python, Rust, TypeScript, Go, or any stack.
 
 ## The Core Premise
 
-**Model capability ≠ execution reliability.** A capable AI model fails when its environment (the "harness") doesn't tell it what's expected, how to verify work, or where things stand. The harness is everything *outside* the model's weights. Your job is to build it.
+**Model capability ≠ execution reliability.** The same model (Opus 4.5) with the same prompt ("build a 2D retro game editor") went from broken features ($9, 20 min) to fully playable ($200, 6 hours) with nothing changed except the harness. When things fail, fix the harness before swapping the model.
 
-## The 5 Subsystems of a Harness
+A harness is everything outside the model weights. It establishes a closed-loop working system: the agent acts, the environment feeds back results, verification gates completion, and state carries forward between sessions.
 
-Every agent-ready project needs these five things. They are not files — they are *capabilities* the repo must provide:
+---
 
-| Subsystem | What it means | How the agent experiences it |
+## The Eight Principles
+
+### 1. The Harness Determines Reliability
+
+**Why:** Agents fail in predictable ways — vague requirements, implicit conventions not written down, incomplete environments, no verification commands, cross-session state loss. Every failure maps to a harness defect. Nine times out of ten, "the model isn't good enough" is a harness problem.
+
+A harness has five subsystems. They are capabilities the repo provides, not files:
+
+| Subsystem | What it means | The agent's experience |
 |---|---|---|
 | **Instruction** | Explicit rules, constraints, conventions | "I know what to do and what NOT to do" |
 | **Tools** | Ability to act (CLI, git, file access) | "I can run commands, read/write files, commit" |
-| **Environment** | Reproducible setup (deps, config) | "I can get running from a cold clone" |
+| **Environment** | Reproducible setup from cold clone | "I can get running in one command" |
 | **State** | Cross-session memory | "I know what was done before me and what's next" |
 | **Feedback / Verification** | Executable proof of correctness | "I know whether I actually succeeded" |
 
-When scaffolding a new project, ask: **does the repo provide each of these five?**
+**To apply:** After scaffold, ask: does the repo provide each of these five? Score each 1–5. The lowest-scoring subsystem is your bottleneck.
 
-## Context is a Finite Resource
+### 2. The Repo Is the System of Record
 
-Every token in your harness files competes with the actual task for model attention. Models have an "attention budget" that degrades as context grows (context rot). The goal is the *smallest set of high-signal tokens* that reliably produce correct behavior.
+**Why:** An agent has exactly three sources of input — system prompts, file contents, and tool output. Your Slack history, Jira tickets, Confluence pages, and that decision you hashed out over coffee don't exist to the agent. If it's not in the repo, it's not real.
 
-**Progressive disclosure:** rather than loading everything upfront, let the agent pull context just-in-time. The entry document references deeper files; the agent loads them when relevant. Organize context as a tree, not a dump.
+**The fresh-session test:** A brand-new agent session (zero prior context) must answer these five questions by reading the repo alone:
 
-## The Repo is the System of Record
-
-An AI agent starts every session with amnesia. If a rule, convention, or decision isn't written down in the repository, **it does not exist to the agent.** Implicit conventions, Slack messages, Jira tickets, and your mental model are invisible.
-
-**The test:** A brand-new agent session (fresh context, no prior chat) must be able to answer these questions by reading the repo alone:
 1. What is this project?
 2. How is it organized?
 3. How do I run it?
 4. How do I verify it?
 5. What was just done, and what's next?
 
-If it can't answer any of these, the harness has a gap.
+If it can't answer any of these, the harness has a blank spot — and every new session will guess (and burn context, and get it wrong) in that spot.
 
-## Scaffolding by Project Type
+**Progressive disclosure:** The entry document is a directory, not an encyclopedia. Keep it at 50–200 lines. Reference deeper files; the agent loads them on demand. A 600-line instruction file guarantees "lost in the middle" — critical rules buried at line 300 get ignored. Signal-to-noise ratio matters more than total coverage.
 
-Not every project needs the full machinery. Match the harness to the project:
+### 3. State Must Survive Sessions
 
-| Project type | What to scaffold |
-|---|---|
-| **Multi-agent codebase** (production, > 20 files, multiple contributors) | Full harness: entry doc, progress tracking, feature queue, decision log, architecture constraints |
-| **Single-person tool** (CLI, dashboard, < 20 files) | Light harness: entry doc + progress tracking only |
-| **Research / experiments** (hypothesis-driven, data pipeline) | Research harness: entry doc + research log, no feature queue |
-| **Throwaway spike** | Nothing beyond a README that says what it does |
+**Why:** Context windows are finite. Even with 1M-token windows, complex tasks exhaust them. When context runs low, agents exhibit "context anxiety" — rushing to finish, skipping verification, choosing simpler solutions. Information produced during a session (why option A over B, which approach was tried and abandoned) is lost unless written down.
 
-## The Entry Document
+**State persistence:** Before every session ends, the agent writes down critical information so the next "shift" can pick up without re-discovering. This is non-negotiable. "I'll update it later" means it never happens.
 
-Whatever you call it (`AGENTS.md`, `README.md`, `CLAUDE.md`), the project must have ONE file that answers those five questions. Keep it lightweight — it's loaded into every session, so every token counts.
+**Separate initialization from implementation.** The first agent session on a new project should establish the environment, verify the baseline, and write the startup readiness checklist. Only then does feature work begin. Mixing initialization and implementation cuts completion rates — OpenAI's experiments showed 31% higher rates with a dedicated init phase. The time invested in init is recovered within 3–4 sessions.
 
-- **Project description** — one paragraph on what and why.
-- **Directory map** — what lives where, in one sentence per directory.
-- **Setup & run commands** — the exact commands to go from cold clone to running.
-- **Verification command** — how to prove the project is working correctly.
-- **Gotchas** — surprising or peculiar things the agent won't discover by reading the filesystem (e.g., "types live in one monolithic file", "tests use a custom runner"). Spend tokens on what the filesystem alone doesn't convey. Skip what's obvious from the file tree.
-- **References to deeper context** — point to other files (progress tracker, decision log, module architecture docs) for the agent to load on demand. Reference them; don't inline their contents.
+**Use ACID principles for agent state:** Atomic commits (all or nothing, `git stash` on failure), Consistency (verify after every operation), Isolation (one agent per branch or progress file), Durability (critical knowledge lives in git-tracked files, not session memory).
 
-## Progress Tracking (State Subsystem)
+### 4. Scope Must Be Constrained
 
-The agent needs to know where things stand. The mechanism depends on project scale:
+**Why:** Agents overreach (creeping into unrelated code) and under-finish (shipping incomplete work). Both stem from the same root: there's no machine-readable boundary around the task.
 
-- **Markdown file** (`PROGRESS.md`) — simplest, works for any project. Tracks last commit, what was completed, what's in progress, known issues, and ordered next steps. Update before every handoff.
-- **Task board** (Kanban, GitHub Issues) — for projects with multiple parallel workstreams. Each task needs an executable verification criterion.
-- **Database / structured log** — for automated pipelines and ratchet loops.
+**Feature lists are harness machinery**, not project management. Every item must have three properties:
+- **What** to build — behavior, not implementation
+- **How to verify** — an executable command, not "looks good"
+- **Status** — `not_started` → `in_progress` → `done` or `blocked`
 
-**The rule:** before ending a session, the agent MUST update state. "I'll update it later" means it never happens.
+**Hard rule:** Only ONE feature `in_progress` at a time. No scope creep. Finish and verify before starting the next. The feature list is the scope enforcement mechanism — the agent reads it at session start, picks the highest-priority unfinished item, and works on nothing else.
 
-### Long-Horizon Sessions
+### 5. Verification Must Be External
 
-For tasks spanning multiple context windows:
+**Why:** A generative model is its own output's best defense attorney. If the same agent that wrote the code also judges it, it will almost always pass itself. Agents declare victory when they *feel* done — not when they *are* done.
 
-- **Compaction:** When context nears the limit, summarize the conversation into `PROGRESS.md` (architectural decisions, unresolved bugs, implementation state) and restart with a clean context window seeded by that summary. Discard redundant tool outputs and stale messages. Start by maximizing recall, then iterate to improve precision.
-- **Sub-agent delegation:** For complex parallel work, delegate to sub-agents with clean context windows. Each returns a condensed summary (1–2K tokens). The main agent synthesizes from these summaries.
+**The verification gap** — the proportion of times the agent claims completion but independent tests fail — is the most common failure mode in agent workflows.
 
-## Feature Queue (for codebase projects)
+**Maker/Checker separation:** The entity that writes the code cannot be the entity that grades it. For everything: local `task check` is a pre-flight, not the final verdict. CI running in a clean environment is the independent checker. Treat CI failures as authoritative — if CI fails, the work is not done, regardless of what passed locally.
 
-When the project has multiple features to build, maintain a machine-readable queue. Every item must have:
-- **What** to build (behavior, not implementation)
-- **How to verify** it's done (an executable command, not "looks good")
-- **Current state** (not started → active → done | blocked)
+**Definition of Done** must be explicit and verifiable by command. "It looked right" is not verification. Every task completes only when: tests pass, lint is clean, state is updated, the work is committed, and the repo is clean.
 
-**Hard rule:** Only ONE feature active at a time. No scope creep. Finish and verify before starting the next.
+**Only full-pipeline runs count.** Unit tests miss component boundary defects — interface mismatches, state propagation errors, resource lifecycle issues. The agent must run the end-to-end verification (`make check`), not just unit tests. When an agent knows its work will be validated by end-to-end tests, its coding behavior shifts: it considers component interactions, respects architectural boundaries, and handles error paths.
 
-## Decision Log
+### 6. Runtime Must Be Observable
 
-Record *why* architectural choices were made. Agents don't retain intermediate reasoning across sessions — without a log, they will redundantly re-evaluate or reverse past decisions. One line per decision: date, what was chosen, why, and what alternatives were considered.
+**Why:** Without observability, retries become blind wandering. The agent can't distinguish "correct" from "looks correct." Evaluation becomes mysticism — the same output gets different judgments from different evaluators. When the agent doesn't know why something failed, its retry direction is random.
 
-## Tool Design
+Observability operates on two layers, both essential:
 
-Tools define the contract between the agent and its environment. Well-designed tools reduce the need for examples and rules:
+- **Runtime observability:** System-level signals — logs, traces, health checks. Answers "what did the system do."
+- **Process observability:** Harness decision artifacts — sprint contracts (what will change, what won't, verification standards), evaluator rubrics (evidence-based scoring), task traces (decision-path records). Answers "why should this change be accepted."
 
-- **Minimal and non-overlapping:** Keep the tool set small enough that a human can definitively say which tool fits any given situation.
-- **Interface teaches usage:** Descriptive parameter names, expressive enums, and clear descriptions teach the model how to use the tool.
-- **Self-contained:** Each tool description carries its own usage instructions. Don't duplicate guidance in the system prompt.
+**Agents can't solve observability themselves** — they don't know what they don't know, log formats drift across sessions, and process observability requires harness-level support. Build signal collection into the harness, not the agent's prompts.
 
-## Loop Engineering: Moving Outside the Loop
+### 7. Sessions Must End Clean
 
-Once a single agent run is reliable, the next step is making *continuous* runs autonomous:
+**Why:** Entropy growth is the default state. Lehman's laws: systems undergoing continuous change grow more complex unless actively managed. Every session introduces changes; without cleanup at exit, technical debt accumulates exponentially.
 
-- **Inside the loop:** You review work, decide the next step, type a prompt. You are the engine.
-- **Outside the loop:** You design a system that triggers the agent, gives it the next task, verifies its output, and saves state. Your job shifts from "prompting" to "designing."
+A project developed with agents for 12 weeks without cleanup:
+- Week 1: build 100%, tests 100%, startup 5 min
+- Week 4: build 95%, tests 92%, startup 15 min
+- Week 8: build 82%, tests 78%, startup 35 min
+- Week 12: build 68%, tests 61%, startup 60+ min
 
-This means: cron jobs, webhook triggers, orchestrator scripts, automated verification gates.
+**Five clean-state conditions** at session end:
+1. Build passes
+2. All tests pass (including pre-existing ones — the session must not break existing functionality)
+3. Progress recorded in machine-readable artifacts (what's done, what's in progress, what's next)
+4. No stale artifacts — no debug logs, temp files, commented-out dead code, TODO markers
+5. Standard startup path works — the next session can begin without manual intervention
 
-## Maker / Checker Separation
+**"Clean up later" means never clean up.** The next agent session doesn't know what you left behind. It'll spend significant time inferring which code is intentional and which is temporary — then start new work on top of the chaos.
 
-A generative model is its own output's best defense attorney. If the same agent that wrote the code also verifies it, it will almost always pass itself.
+### 8. The Agent Must Drive Itself
 
-For critical work, split into two roles:
-- **Maker:** Builds, writes, implements.
-- **Checker:** Independently verifies against the criteria. Rejects if evidence is missing.
+**Why:** Everything in principles 1–7 assumes you're at the keyboard, typing instructions one at a time. Loop engineering moves you outside the loop — the agent decides when to start, when to retry, and when to stop.
 
-This can be a separate agent call, a different model, or an automated script — the key is independence.
+**The /goal pattern** has three parts: a goal (what the end state looks like), a verification method, and a stopping condition. The maker/checker split is what makes autonomous stopping safe — the entity writing code can't judge whether it's done.
 
-## The Ratchet Loop
+**Four loop types**, increasingly autonomous:
+| Type | Trigger | Stop condition | Best for |
+|---|---|---|---|
+| Turn-based | You type each prompt | Agent thinks it's done | Small tasks, exploration |
+| Goal-based | You give a goal and walk away | Independent evaluator confirms done | Complex tasks with clear completion criteria |
+| Time-based | Scheduled interval | You stop it, or it exits on completion | Polling, periodic checks, recurring work |
+| Event-driven | External event (PR, CI failure, new issue) | After handling event or hitting retry limit | Reactive workflows, CI/CD integration |
 
-State only moves forward. The pattern:
-1. Agent attempts a task.
-2. Independent verification runs.
-3. If it passes → state is saved, advance to next.
-4. If it fails → state is rolled back, failure is logged, retry or escalate.
+**Technical debt is a high-interest loan.** OpenAI's five-month Codex experiment taught them: agents copy patterns already in the repo, even inconsistent ones. Encode golden rules into the repository, establish periodic automated cleanup workflows, and capture human taste once — then enforce it continuously. Pay down debt in small increments; the cumulative cleanup cost is always lower than one massive payoff event.
 
-The system ratchets upward in quality without human intervention on every cycle.
+---
 
-## Scaffolding Procedure (When Starting a New Project)
+## Scaffolding Procedure
 
-1. **Determine the level** — full, light, or research harness.
-2. **Create the entry document** — answer the 5 questions. The first draft can be rough.
-3. **Choose a state mechanism** — `PROGRESS.md` is the simplest default.
-4. **Set up environment** — whatever `setup && check` means in this stack. Make it a single command.
-5. **Define the verification command** — what proves the project works? Make it executable.
-6. **Write down the rules** — what must and must not happen. Be explicit.
-7. **Run the fresh-session test** — can a brand-new agent clone, setup, verify, and understand next steps from the repo alone?
-8. **Commit** — the harness itself should be the first commit.
+1. **Determine the level.** Not every project needs the full machinery.
+   - **Multi-agent codebase** (production, > 20 files, multiple contributors) → Full harness: entry doc, progress tracking, feature queue, decision log, architecture constraints
+   - **Single-person tool** (CLI, dashboard, < 20 files) → Light harness: entry doc + progress tracking
+   - **Research / experiments** → Entry doc + research log, no feature queue
+   - **Throwaway spike** → A README that says what it does
 
-## Harness Health Check (For Existing Repos)
+2. **Create the entry document** (`AGENTS.md`, `CLAUDE.md`, or `README.md`). 50–200 lines. Must include:
+   - Project description (one paragraph), directory map, setup/run commands, verification command, gotchas
+   - **Startup Workflow** — exact steps the agent follows at session start: confirm directory, read state files, install deps, review git log, verify baseline passes
+   - **Working Rules** — one task at a time, no premature completion claims, scope discipline, prefer repo artifacts over chat summaries, respect architecture constraints
+   - **Architecture Constraints** — module boundaries, import rules, what depends on what, firewall rules (for full harness)
+   - **Definition of Done** — the checklist: tests pass, lint clean, state updated, committed, repo clean. "It looked right" is not verification.
+   - **Maker / Checker** — local verification is a pre-flight; CI is the independent checker. If CI fails, the work is not done.
+   - **Ratchet Loop** — the failure protocol: stop on red, log the failure, fix the root cause, re-verify. Never advance state past a failing check.
+   - **End Of Session** — the closing ritual: run full check, update state, record decisions, commit, leave repo clean.
 
-1. Can a fresh agent run the setup command and the verification command from a cold clone?
-2. Does a single entry document answer the five questions?
-3. Is the progress/state file current, or is it stale?
-4. Are there debug prints, temp files, commented-out dead code? Remove them.
-5. Does the verification command actually prove correctness, or just check syntax?
-6. Is the decision log up to date, or are there undocumented architectural choices?
+3. **Choose a state mechanism.** `PROGRESS.md` is the simplest default — tracks completed, in-progress, known issues, and ordered next steps. For multi-agent projects, also track last verified commit.
+
+4. **Create a feature queue** (for full harness). Every future feature gets: what (behavior), how to verify (executable command), status. Only ONE `in_progress` at a time. Verification criteria are written before implementation starts.
+
+5. **Set up the environment.** Whatever `setup && check` means in this stack — make it a single command. Use `pyproject.toml` / `package.json` / `Cargo.toml` to lock deps, `.python-version` / `.nvmrc` / `rust-toolchain.toml` for runtime versions.
+
+6. **Define the verification command.** Must prove correctness — not just check syntax. Pytest with behavioral tests, `cargo test`, `npm test` with integration suites. Make it executable: one command that runs the full pipeline.
+
+7. **Write architecture constraints.** For full harness: module boundaries, import direction rules, firewall rules (e.g., "Risk Manager cannot be bypassed"). Prefer "MUST / MUST NOT" language.
+
+8. **Create the decision log.** Every architectural choice gets: date, what was chosen, why, what alternatives were considered. Without this, every new session redundantly re-evaluates past decisions.
+
+9. **Run the fresh-session test.** Spawn a brand-new agent. Give it only the repo. Ask the five questions. If it can't answer all of them, fix the harness and retest.
+
+10. **Run the ratchet test.** Deliberately break a test. Verify the agent stops on red, logs the failure, and refuses to advance state. If the agent claims completion despite a red pipeline, the ratchet is not enforced.
+
+11. **Commit.** The harness itself is the first commit. It is the foundation everything else builds on.
+
+---
+
+## Harness Health Check
+
+For existing repos, run these checks:
+
+1. Can a fresh agent run setup and verification from a cold clone?
+2. Does the entry document answer the five fresh-session questions?
+3. Are all mandatory sections present: Startup Workflow, Working Rules, Architecture Constraints, Definition of Done, Maker/Checker, Ratchet Loop, End Of Session?
+4. Is the state file current, or stale?
+5. Is the feature queue populated with verification criteria per item, and only one active?
+6. Are there debug prints, temp files, commented-out dead code? Remove them.
+7. Does the verification command prove correctness, or just check syntax?
+8. Is the decision log up to date? Any undocumented architectural choices?
+9. Ratchet test: break something, then verify the agent refuses to advance state.
+10. Five clean-state conditions at last session end: build green, tests green, progress recorded, no stale artifacts, startup path works?
+
+**Harness rots like code does.** Audit regularly. As model capabilities improve, remove components that are no longer necessary — a constraint essential today may be overhead in three months.
