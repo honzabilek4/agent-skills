@@ -39,6 +39,14 @@ AGENTS=(
 
 link_it() {
   local src="$1" dst="$2"
+  # Guard: never wire into the repo itself (prevents self-referencing symlinks
+  # when an agent's skill directory is symlinked back to the repo root).
+  local dst_real
+  dst_real="$(cd "$(dirname "$dst")" 2>/dev/null && pwd -P 2>/dev/null)" || dst_real=""
+  if [[ -n "$dst_real" && "$dst_real" == "$REPO_ROOT"* ]]; then
+    echo "  ⚠ skipping $dst (would write into repo — agent dir may be a symlink to repo?)"
+    return 0
+  fi
   if $DRY_RUN; then
     echo "  [DRY-RUN] ln -sf $src $dst"
   else
